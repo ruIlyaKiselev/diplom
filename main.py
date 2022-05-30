@@ -7,9 +7,6 @@ from traffic_rules_corpus import TrafficRulesCorpus
 
 def main(argv):
 
-    for arg in argv:
-        print(arg)
-
     # parse_pages(
     #     'https://pddclub.ru',
     #     '/voprosy-po-pdd-f15',
