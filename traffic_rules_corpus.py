@@ -1,8 +1,12 @@
 import numpy as np
 from numpy.linalg import norm
 
-from parser import TokensSplitter, TokenizedSentence, TfIdfVectorizer
 from math import *
+
+from processed_question import ProcessedQuestion
+from token_splitter import TokensSplitter
+from tokenized_sentence import TokenizedSentence
+from vectorizer import TfIdfVectorizer
 
 
 class TrafficRulesCorpus:
@@ -59,7 +63,7 @@ class TrafficRulesCorpus:
             self.word_appear_map
         )
 
-        cosine_similarity_map = {}
+        cosine_similarity_pairs = []
         for key in self.corpus_vectors.keys():
             max_cosine_similarity = 0
             current_corpus_vectors = self.corpus_vectors[key]
@@ -69,9 +73,29 @@ class TrafficRulesCorpus:
                 current_cosine_similarity = np.dot(A, B) / (norm(A)*norm(B))
                 if current_cosine_similarity > max_cosine_similarity:
                     max_cosine_similarity = current_cosine_similarity
-            cosine_similarity_map[key] = max_cosine_similarity
+            cosine_similarity_pairs.append((key, max_cosine_similarity))
 
-        return {k: v for k, v in sorted(cosine_similarity_map.items(), key=lambda item: item[1])}
+        return sorted(cosine_similarity_pairs, key=lambda tup: tup[1], reverse=True)
+
+    def compare_question_from_site(self, question_from_site):
+        title_compare_vector = self.compare_sentence(question_from_site.title)
+        question_compare_vector = self.compare_sentence(question_from_site.question)
+        merged_compare_result = []
+
+        for current_title_similarity in title_compare_vector:
+            merged_compare_result.append(
+                (current_title_similarity[0], current_title_similarity[1] * 0.3)
+            )
+
+        for current_question_similarity in question_compare_vector:
+            merged_compare_result.append(
+                (current_question_similarity[0], current_question_similarity[1] * 0.5)
+            )
+
+        return ProcessedQuestion(
+            question_from_site.question_id,
+            sorted(merged_compare_result, key=lambda tup: tup[1], reverse=True)
+        )
 
     def __init__(self):
         self.corpus_raw_words = {}
